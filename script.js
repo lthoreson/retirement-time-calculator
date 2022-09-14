@@ -24,23 +24,23 @@ class Presentational extends React.Component {
 
   // method for any button click, by button ID
   handleClick(event) {
-    if (event.target.id === 'reverse') {
-      this.setState({ deadline: !this.state.deadline }); // "reverse" switches calculation mode
-    } else if (event.target.id === 'annual' && this.state.timeline === 'month') {
+    if (event.target.id === 'flip') {// switches calculation mode between deadline and saving
+      this.setState({ deadline: !this.state.deadline });
+    } else if (event.target.id === 'annual' && this.state.timeline === 'month') {// annual salary
       this.setState(state => ({
         timeline: 'year',
         save: Math.round(state.save / 12) }));
 
-    } else if (event.target.id === 'monthly' && this.state.timeline === 'year') {
+    } else if (event.target.id === 'monthly' && this.state.timeline === 'year') {// monthly salary
       this.setState(state => ({
         timeline: 'month',
         save: Math.round(state.save * 12) }));
 
-    } else if (event.target.id === 'back' && this.state.step > 0) {
+    } else if (event.target.id === 'back' && this.state.step > 0) {// goes back one page
       this.setState(state => ({
         step: state.step - 1 }));
 
-    } else if (event.target.id === 'forward' && this.state.step < 3) {
+    } else if (event.target.id === 'forward' && this.state.step < 3) {// goes forward one page
       this.setState(state => ({
         step: state.step + 1 }));
 
@@ -77,9 +77,9 @@ class Presentational extends React.Component {
         salary *= 12; // convert to annual salary for consistency
       }
 
-      const rate = 0.07; // return on investment assumption
+      const rate = 0.07; // "real" rate of return
       let save = 12 * state.save; // convert saving rate to annual
-      const goal = 25 * (salary - save); // multiply cost of living by 25
+      const goal = 25 * (salary - save); // multiply cost of living by 25 (4% rule)
 
       // choose formula based on calculator mode
       if (state.deadline) {
@@ -100,27 +100,24 @@ class Presentational extends React.Component {
     if (this.state.timeline === 'year') {// if salary is annual,
       monthlySalary /= 12; // convert to monthly
     }
-    let year = 'selected';
-    let month = '';
-    let mode = 'Switch to Deadline Mode';
-    let message = `You'll have to invest 
-    ${this.state.save.toLocaleString('en-US')} per month 
-    to retire in 
-    ${this.state.retire} years. 
-    Your monthly allowance is ${Math.round(monthlySalary - this.state.save).toLocaleString('en-US')}`;
 
-    if (this.state.timeline === 'month') {
-      year = '';
-      month = 'selected';
-    };
+    let mode = 'Switch to Deadline Mode';
     if (this.state.deadline) {
       mode = 'Switch to Savings Mode';
     }
 
+    // css class "selected" highlights monthly/yearly buttons on click
+    let year = 'selected';
+    let month = '';
+    if (this.state.timeline === 'month') {
+      year = '';
+      month = 'selected';
+    };
+
     // dictionary for input sections
     const inputs = {
 
-      // salary input section with toggle between annual and monthly
+      // salary input section with toggle button to switch between annual and monthly
       salary: /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
@@ -133,17 +130,18 @@ class Presentational extends React.Component {
 
 
 
+      // current savings balance
       balance: /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
-      React.createElement("h2", null, "How much have you invested?")), /*#__PURE__*/
+      React.createElement("h2", null, "How much have you saved for retirement?")), /*#__PURE__*/
 
       React.createElement("div", { class: "bubble" }, /*#__PURE__*/
       React.createElement("input", { id: "balance", value: this.state.balance.toLocaleString('en-US'), onChange: this.handleChange }))),
 
 
 
-      // saving rate input section with range slider
+      // saving rate input range slider
       save: /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
@@ -159,7 +157,7 @@ class Presentational extends React.Component {
       retire: /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
-      React.createElement("h2", null, "How long will you work?")), /*#__PURE__*/
+      React.createElement("h2", null, "How much longer will you work?")), /*#__PURE__*/
 
       React.createElement("div", { class: "bubble" }, /*#__PURE__*/
       React.createElement("h2", null, this.state.retire, " years"), /*#__PURE__*/
@@ -168,8 +166,9 @@ class Presentational extends React.Component {
 
 
       // button to toggle between calculator modes
-      switch: /*#__PURE__*/React.createElement("button", { id: "reverse", onClick: this.handleClick }, mode),
+      switch: /*#__PURE__*/React.createElement("button", { id: "flip", onClick: this.handleClick }, mode),
 
+      // back and forward buttons
       submit: /*#__PURE__*/
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("button", { id: "back", onClick: this.handleClick, value: -1 }, "<"), /*#__PURE__*/
@@ -177,16 +176,24 @@ class Presentational extends React.Component {
 
 
 
+    // End result messages
+    const invest = /*#__PURE__*/React.createElement("h2", null, "Invest: ", this.state.save.toLocaleString('en-US'), " per month");
+    const retire = /*#__PURE__*/React.createElement("h2", null, "Retire: ", this.state.retire, " years from now!");
+    const budget = /*#__PURE__*/React.createElement("h2", null, "Budget: ", Math.round(monthlySalary - this.state.save).toLocaleString('en-US'), " per month");
+
     // dictionary for two possible result messages
     const results = /*#__PURE__*/
     React.createElement("div", null, /*#__PURE__*/
     React.createElement("h1", null, "Results"), /*#__PURE__*/
-    React.createElement("div", { class: "bubble" }, /*#__PURE__*/
-    React.createElement("h2", null, message)));
+    React.createElement("div", { class: "bubble" },
+    invest,
+    retire,
+    budget));
 
 
 
-    const itinerary = [
+    // app pages
+    const pages = [
     inputs.salary,
     inputs.balance,
     [this.state.deadline ? inputs.retire : inputs.save, inputs.switch],
@@ -197,7 +204,7 @@ class Presentational extends React.Component {
     return /*#__PURE__*/(
       React.createElement("div", null, /*#__PURE__*/
       React.createElement("h1", null, "Financial Freedom Calculator"), /*#__PURE__*/React.createElement("hr", null),
-      itinerary[this.state.step],
+      pages[this.state.step],
       inputs.submit));
 
 
